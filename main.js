@@ -6,9 +6,6 @@ const sql = require('mssql');
 const SERIAL_BAUD_RATE = 9600;
 const SERVIDOR_PORTA = 3300;
 
-// configure a linha abaixo caso queira que os dados capturados sejam inseridos no banco de dados.
-// false -> nao insere
-// true -> insere
 const HABILITAR_OPERACAO_INSERIR = true;
 
 // altere o valor da variável AMBIENTE para o valor desejado:
@@ -25,12 +22,10 @@ const serial = async (
     if (AMBIENTE == 'desenvolvimento') {
         poolBancoDados = mysql.createPool(
             {
-                // altere!
-                // CREDENCIAIS DO BANCO LOCAL - MYSQL WORKBENCH
                 host: 'localhost',
                 user: 'root',
                 password: 'sptech',
-                database: 'testeAquatech'
+                database: 'alertcenter'
             }
         ).promise();
     } else if (AMBIENTE == 'producao') {
@@ -41,6 +36,7 @@ const serial = async (
     
     const portas = await serialport.SerialPort.list();
     const portaArduino = portas.find((porta) => porta.vendorId == 2341 && porta.productId == 43);
+
     if (!portaArduino) {
         throw new Error('O arduino não foi encontrado em nenhuma porta serial');
     }
@@ -53,8 +49,9 @@ const serial = async (
     arduino.on('open', () => {
         console.log(`A leitura do arduino foi iniciada na porta ${portaArduino.path} utilizando Baud Rate de ${SERIAL_BAUD_RATE}`);
     });
+
+    // o '.pipe()' transforma algo 'readable' para 'writeable', ou seja, ele transforma um fluxo legível para um fluxo de gravação ao coletar dados.
     arduino.pipe(new serialport.ReadlineParser({ delimiter: '\r\n' })).on('data', async (data) => {
-        //console.log(data);
         const valores = data.split(';');
         const dht11Umidade = parseFloat(valores[0]);
         const dht11Temperatura = parseFloat(valores[1]);
@@ -64,16 +61,9 @@ const serial = async (
 
         if (HABILITAR_OPERACAO_INSERIR) {
             if (AMBIENTE == 'producao') {
-                // altere!
-                // Este insert irá inserir os dados na tabela "medida"
-                // -> altere nome da tabela e colunas se necessário
-                // Este insert irá inserir dados de fk_aquario id=1 (fixo no comando do insert abaixo)
-                // >> Importante! você deve ter o aquario de id 1 cadastrado.
-                sqlquery = `INSERT INTO medida (dht11_umidade, dht11_temperatura, momento, fk_aquario) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 1)`;
 
-                // CREDENCIAIS DO BANCO REMOTO - SQL SERVER
-                // Importante! você deve ter criado o usuário abaixo com os comandos presentes no arquivo
-                // "script-criacao-usuario-sqlserver.sql", presente neste diretório.
+                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 1)`;
+
                 const connStr = "Server=servidor-acquatec.database.windows.net;Database=bd-acquatec;User Id=usuarioParaAPIArduino_datawriter;Password=#Gf_senhaParaAPI;";
 
                 function inserirComando(conn, sqlquery) {
@@ -84,20 +74,13 @@ const serial = async (
                 sql.connect(connStr)
                     .then(conn => inserirComando(conn, sqlquery))
                     .catch(err => console.log("erro! " + err));
-
             } else if (AMBIENTE == 'desenvolvimento') {
 
-                // altere!
-                // Este insert irá inserir os dados na tabela "medida"
-                // -> altere nome da tabela e colunas se necessário
-                // Este insert irá inserir dados de fk_aquario id=1 (fixo no comando do insert abaixo)
-                // >> você deve ter o aquario de id 1 cadastrado.
                 await poolBancoDados.execute(
-                    'INSERT INTO medida (dht11_umidade, dht11_temperatura, momento, fk_aquario) VALUES (?, ?, now(), 1)',
+                    'INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (?, ?, now(), 1)',
                     [dht11Umidade, dht11Temperatura]
                 );
                 console.log("valores inseridos no banco: ", dht11Umidade + ", " + dht11Temperatura)
-
             } else {
                 throw new Error('Ambiente não configurado. Verifique o arquivo "main.js" e tente novamente.');
             }
@@ -109,7 +92,6 @@ const serial = async (
 }
 
 
-// não altere!
 const servidor = (
     valoresDht11Umidade,
     valoresDht11Temperatura,
