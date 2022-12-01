@@ -1,59 +1,46 @@
-/* 
+/* Comandos para SQL Workbench - Local - Desenvolvimento */
 
-para workbench - local - desenvolvimento 
+-- CREATE DATABASE alertcenter;
 
-*/
+-- USE alertcenter;
 
--- CREATE DATABASE testeAquatech;
-
--- USE testeAquatech;
-
-
-create table aquario (
-/* em nossa regra de negócio, um aquario tem apenas um sensor */
-	id INT PRIMARY KEY AUTO_INCREMENT,
-	descricao VARCHAR(300)
+-- Entidade Forte
+CREATE TABLE Sensor (
+idSensor INT PRIMARY KEY AUTO_INCREMENT,
+numeroSerie VARCHAR(10),
+descricao VARCHAR(45),
+fkRack INT,
+FOREIGN KEY (fkRack) REFERENCES Rack(idRack)
 );
 
-/*
-esta tabela "medida" deve estar de acordo com o comando INSERT
-do ambiente de DESENVOLVIMENTO do arquivo "main.js"
-*/
-
-create table medida (
-	id INT PRIMARY KEY AUTO_INCREMENT,
-	dht11_umidade DECIMAL(10,2),
-	dht11_temperatura DECIMAL(10,2),
-	momento DATETIME,
-	fk_aquario INT, FOREIGN KEY (fk_aquario) 
-		REFERENCES aquario(id)
+-- Entidade Fraca (depende do Sensor)
+CREATE TABLE Metrica (
+idMetrica INT,
+fkSensor INT,
+FOREIGN KEY (fkSensor) REFERENCES Sensor(idSensor),
+PRIMARY KEY (idMetrica,fkSensor),
+temperatura DECIMAL(10,2),
+umidade DECIMAL(10,2),
+dtMetrica DATETIME
 );
 
 
-/* 
+/* Comandos para SQL Server - Remoto - Produção */
 
-para sql server - remoto - produção
-
-*/
-
-create table aquario (
-/* em nossa regra de negócio, um aquario tem apenas um sensor */
-	id INT PRIMARY KEY IDENTITY(1,1),
-	descricao VARCHAR(300)
+CREATE TABLE sensor (
+idSensor INT PRIMARY KEY IDENTITY(1,1),
+numeroSerie VARCHAR(10),
+descricao VARCHAR(45),
+fkRack INT,
+FOREIGN KEY (fkRack) REFERENCES rack(idRack)
 );
 
-/*
-esta tabela "medida" deve estar de acordo com o comando INSERT
-do ambiente de PRODUCAO do arquivo "main.js"
-*/
-
-CREATE TABLE medida (
-	id INT PRIMARY KEY IDENTITY(1,1),
-	dht11_umidade DECIMAL(10,2),
-	dht11_temperatura DECIMAL(10,2),
-	luminosidade DECIMAL,
-	lm35_temperatura DECIMAL(10,2),
-	chave TINYINT,
-	momento DATETIME,
-	fk_aquario INT FOREIGN KEY REFERENCES aquario(id)
+CREATE TABLE metrica (
+idMetrica INT IDENTITY(1,1),
+fkSensor INT,
+FOREIGN KEY (fkSensor) REFERENCES sensor(idSensor),
+PRIMARY KEY (idMetrica,fkSensor),
+temperatura DECIMAL(10,2),
+umidade DECIMAL(10,2),
+dtMetrica DATETIME
 );
