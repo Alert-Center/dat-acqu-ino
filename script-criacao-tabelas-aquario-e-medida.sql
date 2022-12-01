@@ -27,6 +27,12 @@ dtMetrica DATETIME
 
 /* Comandos para SQL Server - Remoto - Produção */
 
+CREATE USER [usuarioParaAPIArduino_datawriter]
+WITH PASSWORD = '#Gf_senhaParaAPI',
+DEFAULT_SCHEMA = dbo;
+
+EXEC sys.sp_addrolemember @rolename = N'db_datawriter', @membername = N'usuarioParaAPIArduino_datawriter';
+
 CREATE TABLE sensor (
 idSensor INT PRIMARY KEY IDENTITY(1,1),
 numeroSerie VARCHAR(10),

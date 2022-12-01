@@ -11,7 +11,7 @@ const HABILITAR_OPERACAO_INSERIR = true;
 // altere o valor da variável AMBIENTE para o valor desejado:
 // API conectada ao banco de dados remoto, SQL Server -> 'producao'
 // API conectada ao banco de dados local, MySQL Workbench - 'desenvolvimento'
-const AMBIENTE = 'desenvolvimento';
+const AMBIENTE = 'producao';
 
 const serial = async (
     valoresDht11Umidade,
@@ -62,9 +62,9 @@ const serial = async (
         if (HABILITAR_OPERACAO_INSERIR) {
             if (AMBIENTE == 'producao') {
 
-                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 1)`;
+                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 3)`;
 
-                const connStr = "Server=servidor-acquatec.database.windows.net;Database=bd-acquatec;User Id=usuarioParaAPIArduino_datawriter;Password=#Gf_senhaParaAPI;";
+                const connStr = "Server=alertcenter.database.windows.net;Database=alertcenter;User Id=usuarioParaAPIArduino_datawriter;Password=#Gf_senhaParaAPI;";
 
                 function inserirComando(conn, sqlquery) {
                     conn.query(sqlquery);
