@@ -11,7 +11,7 @@ const HABILITAR_OPERACAO_INSERIR = true;
 // altere o valor da variável AMBIENTE para o valor desejado:
 // API conectada ao banco de dados remoto, SQL Server -> 'producao'
 // API conectada ao banco de dados local, MySQL Workbench - 'desenvolvimento'
-const AMBIENTE = 'producao';
+const AMBIENTE = 'desenvolvimento';
 
 const serial = async (
     valoresDht11Umidade,
@@ -62,17 +62,20 @@ const serial = async (
         if (HABILITAR_OPERACAO_INSERIR) {
             if (AMBIENTE == 'producao') {
 
-                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 3)`;
+                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 1)`;
+
+                sqlquery2 = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade + 20}, ${dht11Temperatura + 20}, CURRENT_TIMESTAMP, 2)`;
 
                 const connStr = "Server=alertcenter.database.windows.net;Database=alertcenter;User Id=usuarioParaAPIArduino_datawriter;Password=#Gf_senhaParaAPI;";
 
-                function inserirComando(conn, sqlquery) {
+                function inserirComando(conn, sqlquery, sqlquery2) {
                     conn.query(sqlquery);
+                    conn.query(sqlquery2);
                     console.log("valores inseridos no banco: ", dht11Umidade + ", " + dht11Temperatura)
                 }
 
                 sql.connect(connStr)
-                    .then(conn => inserirComando(conn, sqlquery))
+                    .then(conn => inserirComando(conn, sqlquery, sqlquery2))
                     .catch(err => console.log("erro! " + err));
             } else if (AMBIENTE == 'desenvolvimento') {
 
@@ -80,6 +83,12 @@ const serial = async (
                     'INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (?, ?, now(), 1)',
                     [dht11Umidade, dht11Temperatura]
                 );
+
+                await poolBancoDados.execute(
+                    'INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (?, ?, now(), 2)',
+                    [dht11Umidade + 20, dht11Temperatura + 20]
+                );
+
                 console.log("valores inseridos no banco: ", dht11Umidade + ", " + dht11Temperatura)
             } else {
                 throw new Error('Ambiente não configurado. Verifique o arquivo "main.js" e tente novamente.');
