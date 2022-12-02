@@ -11,7 +11,7 @@ const HABILITAR_OPERACAO_INSERIR = true;
 // altere o valor da variável AMBIENTE para o valor desejado:
 // API conectada ao banco de dados remoto, SQL Server -> 'producao'
 // API conectada ao banco de dados local, MySQL Workbench - 'desenvolvimento'
-const AMBIENTE = 'desenvolvimento';
+const AMBIENTE = 'producao';
 
 const serial = async (
     valoresDht11Umidade,
@@ -61,17 +61,17 @@ const serial = async (
 
         if (HABILITAR_OPERACAO_INSERIR) {
             if (AMBIENTE == 'producao') {
+                var dataAgora = new Date().toLocaleString("en-US").slice(0,19).replace(',','').replaceAll('/','-')
+                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, '${dataAgora}', 1)`;
 
-                sqlquery = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade}, ${dht11Temperatura}, CURRENT_TIMESTAMP, 1)`;
-
-                sqlquery2 = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade + 20}, ${dht11Temperatura + 20}, CURRENT_TIMESTAMP, 2)`;
+                sqlquery2 = `INSERT INTO metrica (umidade, temperatura, dtMetrica, fkSensor) VALUES (${dht11Umidade + 20}, ${dht11Temperatura + 20}, '${dataAgora}', 2)`;
 
                 const connStr = "Server=alertcenter.database.windows.net;Database=alertcenter;User Id=usuarioParaAPIArduino_datawriter;Password=#Gf_senhaParaAPI;";
 
                 function inserirComando(conn, sqlquery, sqlquery2) {
                     conn.query(sqlquery);
                     conn.query(sqlquery2);
-                    console.log("valores inseridos no banco: ", dht11Umidade + ", " + dht11Temperatura)
+                    console.log("valores inseridos no banco: ", dht11Umidade + ", " + dht11Temperatura + ',' + dataAgora)
                 }
 
                 sql.connect(connStr)
